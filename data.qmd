@@ -1,5 +1,5 @@
 # Data
-
+We picked some stock daily price data from sp500 index.
 ## Description
 
 ## Missing value analysis
