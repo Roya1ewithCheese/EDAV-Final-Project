@@ -6,11 +6,11 @@ execute:
   echo: true
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "Stock Return Data Analysis"
   author:
-    - AUTHOR1 (UNI1)
-    - AUTHOR2 (UNI2)
-  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
+    - Holden Li (hl3501)
+    - Albert Chi (yc4548)
+  repo-url: https://github.com/Roya1ewithCheese/EDAV-Final-Project.git
   date: today
   page-footer:
     right: |
