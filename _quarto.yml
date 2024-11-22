@@ -6,7 +6,7 @@ execute:
   echo: true
 
 book:
-  title: "Stock Return Data Analysis"
+  title: "Stock Return Analysis"
   author:
     - Holden Li (hl3501)
     - Albert Chi (yc4548)
