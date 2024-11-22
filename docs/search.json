@@ -2,22 +2,15 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "YOUR PROJECT TITLE",
+    "title": "Stock Daily Return Analysis",
     "section": "",
     "text": "1 Introduction"
-  },
-  {
-    "objectID": "data.html#description",
-    "href": "data.html#description",
-    "title": "2  Data",
-    "section": "2.1 Description",
-    "text": "2.1 Description"
   },
   {
     "objectID": "data.html#missing-value-analysis",
     "href": "data.html#missing-value-analysis",
     "title": "2  Data",
-    "section": "2.2 Missing value analysis",
-    "text": "2.2 Missing value analysis"
+    "section": "2.1 Missing value analysis",
+    "text": "2.1 Missing value analysis"
   }
 ]
