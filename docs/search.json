@@ -4,13 +4,20 @@
     "href": "index.html",
     "title": "Stock Return Analysis",
     "section": "",
-    "text": "1 Introduction"
+    "text": "1 Introduction\nUnderstanding the characteristics of financial data is a first step for quantitative research. For this project, we chose to analyze stock daily return data from the S&P 500 index because it offers a diverse and widely studied dataset that is crucial for exploring key financial metrics. By examining raw stock return, we can compute essential statistics such as mean and variance (volatility), correlation between stocks, and the distribution of daily returns. This analysis forms the foundation for understanding how individual stocks behave and interact within the broader market.\nAdditionally, the project involves implementing simple factor models like the Capital Asset Pricing Model (CAPM) and Fama-French models. Through linear regression, I will estimate factor loadings (betas) and excessive returns (alphas), evaluating their statistical properties such as mean, variance, and distribution. I will also test the performance of these linear models using t-statistics and p-values to understand how well the chosen factors explain stock returns linearly. While this project is exploratory and does not include advanced QR applications like portfolio optimization or alpha generation, it serves as a critical step in building the analytical and statistical tools required for such work."
+  },
+  {
+    "objectID": "data.html#description",
+    "href": "data.html#description",
+    "title": "2  Data",
+    "section": "2.1 Description",
+    "text": "2.1 Description\nThe data for this project is sourced from Yahoo Finance, a widely used platform providing comprehensive historical market data for stocks and indices. The dataset includes daily records for multiple assets from the S&P 500 index, with columns such as Date, Open, High, Low, Close, Adjusted Close, and Volume. The primary focus is on the Close price, which will be used to calculate the daily log returns. Log returns are derived by taking the natural logarithm of the ratio of successive closing prices. These returns are central to the analysis as they standardize price changes, making the data scale-independent and additive over time, which simplifies statistical modeling and comparisons. The log return is preferred over simple return because it accounts for compounding effects and ensures symmetry between positive and negative percentage changes, making it ideal for financial data analysis.\n\n\nCode\n# Display the first few rows of the resulting dataframe\nhead(sp500_stock_df)\n\n\n        Date     Open     High      Low    Close    Volume Adjusted Ticker\n1 2013-01-02 19.77929 19.82143 19.34393 19.60821 560518000 16.68734   AAPL\n2 2013-01-03 19.56714 19.63107 19.32143 19.36071 352965200 16.47672   AAPL\n3 2013-01-04 19.17750 19.23679 18.77964 18.82143 594333600 16.01776   AAPL\n4 2013-01-07 18.64286 18.90357 18.40000 18.71071 484156400 15.92354   AAPL\n5 2013-01-08 18.90036 18.99607 18.61607 18.76107 458707200 15.96639   AAPL\n6 2013-01-09 18.66071 18.75036 18.42821 18.46786 407604400 15.71686   AAPL"
   },
   {
     "objectID": "data.html#missing-value-analysis",
     "href": "data.html#missing-value-analysis",
     "title": "2  Data",
-    "section": "2.1 Missing value analysis",
-    "text": "2.1 Missing value analysis"
+    "section": "2.2 Missing value analysis",
+    "text": "2.2 Missing value analysis"
   }
 ]

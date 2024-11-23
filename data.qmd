@@ -1,5 +1,96 @@
 # Data
 We picked some stock daily price data from sp500 index.
+
+```{r}
+# Load necessary libraries
+library(quantmod)
+library(dplyr)
+
+# Define a function to fetch stock data
+fetch_stock_data <- function(tickers, start_date, end_date) {
+  tryCatch({
+    stock_data <- lapply(tickers, function(ticker) {
+      getSymbols(ticker, src = "yahoo", from = start_date, to = end_date, auto.assign = FALSE)
+    })
+    names(stock_data) <- tickers
+    return(stock_data)
+  }, error = function(e) {
+    print(paste("Error fetching stock data:", e))
+    return(NULL)
+  })
+}
+
+# Define S&P 500 assets and ticker
+sp500_assets <- c('AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'BRK-B', 'UNH', 
+                  'JNJ', 'V', 'PG', 'JPM', 'XOM', 'BAC', 'PFE', 'HD', 'MA', 'KO', 
+                  'DIS', 'NFLX')
+sp500_ticker <- "^GSPC"
+
+# Define date ranges
+start_date <- '2013-01-01'
+end_date <- '2023-12-31'
+
+real_start_date <- '2024-01-01'
+real_end_date <- '2024-07-31'
+
+# Fetch stock data for the S&P 500 assets
+sp500_stock_data <- fetch_stock_data(sp500_assets, start_date, end_date)
+
+# Fetch S&P 500 index data
+sp500_index_data <- fetch_stock_data(c(sp500_ticker), start_date, end_date)
+
+```
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+library(quantmod)
+
+# Function to transform stock data into a tidy dataframe
+create_neat_dataframe <- function(stock_data) {
+  # Initialize an empty list to store dataframes
+  all_stock_data <- list()
+  
+  for (ticker in names(stock_data)) {
+    # Check if the stock data is valid
+    if (!is.null(stock_data[[ticker]])) {
+      # Convert the xts object to a dataframe
+      data <- data.frame(Date = index(stock_data[[ticker]]), coredata(stock_data[[ticker]]))
+      data$Ticker <- ticker
+      
+      # Ensure consistent column naming
+      colnames(data) <- c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted", "Ticker")
+      
+      # Append to the list
+      all_stock_data[[ticker]] <- data
+    }
+  }
+  
+  # Combine all dataframes into one
+  combined_data <- bind_rows(all_stock_data)
+  
+  return(combined_data)
+}
+
+# Call the function and create a tidy dataframe
+sp500_stock_df <- create_neat_dataframe(sp500_stock_data)
+
+
+```
+
+
+
+
 ## Description
+
+The data for this project is sourced from Yahoo Finance, a widely used platform providing comprehensive historical market data for stocks and indices. The dataset includes daily records for multiple assets from the S&P 500 index, with columns such as Date, Open, High, Low, Close, Adjusted Close, and Volume. The primary focus is on the Close price, which will be used to calculate the daily log returns. Log returns are derived by taking the natural logarithm of the ratio of successive closing prices. These returns are central to the analysis as they standardize price changes, making the data scale-independent and additive over time, which simplifies statistical modeling and comparisons. The log return is preferred over simple return because it accounts for compounding effects and ensures symmetry between positive and negative percentage changes, making it ideal for financial data analysis.
+
+```{r}
+# Display the first few rows of the resulting dataframe
+head(sp500_stock_df)
+```
+
 
 ## Missing value analysis
