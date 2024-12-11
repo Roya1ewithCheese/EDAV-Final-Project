@@ -5,6 +5,7 @@ We picked some stock daily price data from sp500 index.
 # Load necessary libraries
 library(quantmod)
 library(dplyr)
+library(ggplot2)
 
 # Define a function to fetch stock data
 fetch_stock_data <- function(tickers, start_date, end_date) {
@@ -91,6 +92,221 @@ The data for this project is sourced from Yahoo Finance, a widely used platform 
 # Display the first few rows of the resulting dataframe
 head(sp500_stock_df)
 ```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Define the tickers of interest
+selected_tickers <- c("AAPL", "TSLA", "NVDA", "JNJ", "JPM", "BRK-B")
+
+# Filter the dataframe for the selected tickers
+sp500_subset <- sp500_stock_df %>%
+  filter(Ticker %in% selected_tickers)
+
+# Create the line plot
+ggplot(sp500_subset, aes(x = Date, y = Adjusted, color = Ticker)) +
+  geom_line() +
+  labs(
+    title = "Adjusted Close Prices Over Time",
+    x = "Date",
+    y = "Adjusted Close"
+  ) +
+  theme_minimal()
+
+```
+
+
+Although an initial glance at raw price data may provide a sense of how various assets evolve over time, such plots are not ideal for comparative analysis. Each asset operates within its own price range, making direct comparisons misleading. To enable a fair evaluation across different assets, we employ measures such as daily returns and cumulative returns. A commonly used definition for the daily return is:
+
+$$
+\text{Daily Return} = \frac{P_{t} - P_{t-1}}{P_{t-1}}
+$$
+
+
+```{r}
+daily_returns <- function(data) {
+  # Ensure the data is sorted by Date
+  data <- data[order(data$Date), ]
+  
+  # Calculate daily returns using Adjusted prices
+  # diff(data$Adjusted) gives P_t - P_{t-1}, and head(data$Adjusted, -1) gives P_{t-1}
+  returns <- diff(data$Adjusted) / head(data$Adjusted, -1)
+  
+  # Create a new data frame with Date and Return
+  result <- data.frame(
+    Date = data$Date[-1],    # Remove the first date since there's no previous day return
+    Return = returns
+  )
+  
+  return(result)
+}
+```
+
+
+
+```{r}
+AAPL_price <- subset(sp500_stock_df, Ticker == "AAPL")
+AAPL_return <- daily_returns((AAPL_price))
+JNJ_price <- subset(sp500_stock_df, Ticker == "JNJ")
+JNJ_return <- daily_returns((JNJ_price))
+```
+
+
+### Problems with visualizing return over time, and the histogram of return
+
+```{r}
+library(patchwork)
+
+# Create AAPL daily returns plot
+p1 <- ggplot(AAPL_return, aes(x = Date, y = Return)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "AAPL Daily Returns",
+    x = "Date",
+    y = "Daily Return"
+  ) +
+  theme_minimal()
+
+# Create JNJ daily returns plot
+p2 <- ggplot(JNJ_return, aes(x = Date, y = Return)) +
+  geom_line(color = "red") +
+  labs(
+    title = "JNJ Daily Returns",
+    x = "Date",
+    y = "Daily Return"
+  ) +
+  theme_minimal()
+
+# Display side-by-side
+p1 + p2
+```
+
+```{r}
+mean_aapl <- mean(AAPL_return$Return, na.rm = TRUE)
+sd_aapl <- sd(AAPL_return$Return, na.rm = TRUE)
+
+# Plot for AAPL
+p1 <- ggplot(AAPL_return, aes(x = Return)) +
+  geom_histogram(aes(y = ..density..), 
+                 binwidth = 0.01, 
+                 fill = "steelblue", 
+                 color = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = mean_aapl, sd = sd_aapl), 
+                color = "red", 
+                size = 1) +
+  labs(
+    title = "AAPL Daily Returns Distribution",
+    x = "Daily Return",
+    y = "Density"
+  ) +
+  theme_minimal()
+
+# Calculate mean and sd for JNJ returns
+mean_jnj <- mean(JNJ_return$Return, na.rm = TRUE)
+sd_jnj <- sd(JNJ_return$Return, na.rm = TRUE)
+
+# Plot for JNJ
+p2 <- ggplot(JNJ_return, aes(x = Return)) +
+  geom_histogram(aes(y = ..density..), 
+                 binwidth = 0.01, 
+                 fill = "steelblue", 
+                 color = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = mean_jnj, sd = sd_jnj), 
+                color = "red", 
+                size = 1) +
+  labs(
+    title = "JNJ Daily Returns Distribution",
+    x = "Daily Return",
+    y = "Density"
+  ) +
+  theme_minimal()
+
+# Display both plots side-by-side using patchwork
+p1 + p2
+```
+<span style="font-size:20px;"><strong>Will investments on AAPL and JNJ perform similarly over time?</strong></span>
+
+
+### But when it compounds...
+```{r}
+AAPL_compounding_return <- AAPL_return %>%
+  mutate(Compounding_Return = cumprod(1 + Return)) %>%
+  mutate(Ticker = "AAPL")
+
+# Compute compounding returns for JNJ
+JNJ_compounding_return <- JNJ_return %>%
+  mutate(Compounding_Return = cumprod(1 + Return)) %>%
+  mutate(Ticker = "JNJ")
+
+# Combine the two
+combined_compounding_return <- bind_rows(AAPL_compounding_return, JNJ_compounding_return)
+
+# Plot both AAPL and JNJ on the same plot
+ggplot(combined_compounding_return, aes(x = Date, y = Compounding_Return, color = Ticker)) +
+  geom_line() +
+  labs(
+    title = "AAPL and JNJ Compounding Returns Over Time",
+    x = "Date",
+    y = "Compounding Return"
+  ) +
+  theme_minimal()
+```
+
+
+## The Limitations of Simple Plots for Analyzing Returns
+The daily return plot looks like noise, oscillating about 0, and we cannot make anything out of it. The histogram of returns has a mean close to 0 and resembles a normal distribution. However, when we look at the compounding return over time, it clearly goes up and is no longer messy. Why is it so hard to capture information out of the return? It’s due to market efficiency: if the returns were obviously informative, then something would be wrong, because no one in the market is foolish. If the return data showed anything other than noise, it would mean easy profit opportunities, which would quickly vanish as participants exploit them through arbitrage. Unless you engage in high-frequency trading, it’s impossible to take advantage of such fleeting signals. Thus, it is perfectly normal for the returns to look like noise, as it reflects an efficient market. 
+
+
+## Is return informative?
+But why does the cumulative return plot appear clearer? In the long term, there are still profits to be gained, influenced by industry trends or other large-scale factors. While these factors are hidden within the daily noise, they become evident when returns accumulate. Simply using basic plots like this, however, won’t help us uncover these subtleties. There are many important patterns hidden in the return data, that are not easy to visualize. We need more complex models to make the non visible pattern visible.
+
+
+```{r}
+aapl_stats <- AAPL_return %>%
+  summarize(
+    mean = mean(Return, na.rm = TRUE),
+    q25 = quantile(Return, 0.25, na.rm = TRUE),
+    q50 = quantile(Return, 0.5, na.rm = TRUE),
+    q75 = quantile(Return, 0.75, na.rm = TRUE),
+    sd = sd(Return, na.rm = TRUE)
+  )
+
+# Calculate stats for JNJ
+jnj_stats <- JNJ_return %>%
+  summarize(
+    mean = mean(Return, na.rm = TRUE),
+    q25 = quantile(Return, 0.25, na.rm = TRUE),
+    q50 = quantile(Return, 0.5, na.rm = TRUE),
+    q75 = quantile(Return, 0.75, na.rm = TRUE),
+    sd = sd(Return, na.rm = TRUE)
+  )
+
+# Print the stats
+cat("AAPL Statistics:\n")
+print(aapl_stats)
+cat("\nJNJ Statistics:\n")
+print(jnj_stats)
+
+# Combine the data for plotting
+combined_returns <- rbind(
+  data.frame(Ticker = "AAPL", Return = AAPL_return$Return),
+  data.frame(Ticker = "JNJ", Return = JNJ_return$Return)
+)
+
+# Boxplot comparison
+ggplot(combined_returns, aes(x = Ticker, y = Return, fill = Ticker)) +
+  geom_boxplot() +
+  labs(
+    title = "Comparison of AAPL and JNJ Daily Returns",
+    x = "Ticker",
+    y = "Daily Return"
+  ) +
+  theme_minimal()
+```
+
 
 
 ## Missing value analysis
