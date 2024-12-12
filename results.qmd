@@ -1,6 +1,10 @@
 # Results
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+```
 
+## The Fama-French Factor Model
 ```{r}
 library(dplyr)
 library(tibble)
@@ -45,7 +49,7 @@ ff3 <- ff_df %>%
   select(-RF) %>% 
   filter(Date %in% excess_returns$Date)  
 
-head(ff3)
+tail(ff3)
 ```
 
 ```{r}
@@ -142,12 +146,6 @@ rolling_ff3_coefficients <- function(returns, ff3_factors, window_size = 252, ch
 ```
 
 
-```{r}
-factor_loadings <- rolling_ff3_coefficients(excess_returns_df, ff3)
-
-head(factor_loadings$alpha)
-```
-
 
 We apply the Fama-French three-factor model to the returns of the selected assets. The model is expressed as:
 
@@ -176,12 +174,35 @@ Instead of focusing solely on returns, our analysis emphasizes the $\alpha$ and 
 
 
 ```{r}
+factor_loadings <- rolling_ff3_coefficients(excess_returns_df, ff3, window_size = 630)
+head(factor_loadings$alpha)
+```
+
+
+
+
+```{r}
 library(ggplot2)
 
 alphas_df <- factor_loadings$alpha %>%
   rownames_to_column(var = "Date")
+ 
+beta1_df <- factor_loadings$beta_1 %>%
+  rownames_to_column(var = "Date")
 
-# Reshape data into long format for ggplot
+beta2_df <- factor_loadings$beta_2 %>%
+  rownames_to_column(var = "Date")
+
+beta3_df <- factor_loadings$beta_3 %>%
+  rownames_to_column(var = "Date")
+```
+
+### Observations on Alpha Distributions
+
+Alpha measures an investment's excess return over a benchmark -- the market or factor-based expectations. In models like Fama-French, it captures the portion of returns unexplained by factors such as market risk or size. In reality, alpha often reverts to zero as market inefficiencies are corrected, making it hard to find and sustain a constantly positive alpha. Investors aim for consistent, positive alpha as a source of stable excess return.
+
+```{r}
+library(ggridges)
 alphas_long <- alphas_df %>%
   pivot_longer(cols = -Date, names_to = "Stock", values_to = "Alpha")
 
@@ -196,12 +217,6 @@ ggplot(alphas_long, aes(x = as.Date(Date), y = Alpha, color = Stock)) +
   theme_minimal() +  # Apply a clean theme
   theme(legend.position = "top")
 
-```
-
-## Observations on Alpha Distributions
-
-```{r}
-library(ggridges)
 alphas_long <- alphas_long %>%
   group_by(Stock) %>%
   mutate(MeanAlpha = mean(Alpha)) %>%
@@ -217,23 +232,180 @@ ggplot(alphas_long, aes(x = Alpha, y = reorder(Stock, MeanAlpha), fill = MeanAlp
   ) +
   theme_minimal() +
   theme(legend.position = "top")
+
 ```
 
-### Low-Performing Stocks:
-- The alpha distributions for low-performing stocks exhibit compact and peaked shapes, with the mean centered around zero. 
+Most alphas fluctuate around zero. 
+
+#### Stocks with no excess return: PG, BRK.B, JNJ, KO, PFE
+- The alpha distributions for these low-performing stocks exhibit compact and peaked shapes, with the mean centered around zero. 
 
 - This indicates that these stocks consistently achieve alpha values near zero, aligning closely with the efficient market hypothesis. In an efficient market, these stocks do not present persistent opportunities for abnormal returns.
 
-### High-Performing Stocks:
+#### Stocks with stable positive excess return: AAPL, MSFT, HD, GOOGL, JPM, V
+- These high-performing stocks have a consistently positive alpha, the distribution is less compact, but still has a peak. 
+
+- This indicates that these stocks consistently outperform the Fama-French Factor Model, with a constant excess return. The excess return is unexplained by Market Return, SMB and HML. We might be able to explain the excess return by introducing new factors. 
+
+- Long-term investment on these stocks will yield a positive excess return over Fama-French Factors. 
+
+#### Stocks with very unstable positive excess return: NVDA, TSLA, NFLX, AMZN 
 - The alpha distributions for high-performing stocks display very fat tails and lack a distinct peak, resulting in a flat and widespread shape.
 
-- These stocks exhibit significantly higher mean alphas, indicating periods of consistent outperformance of the efficient market. 
+- These stocks exhibit significantly higher mean alphas, indicating periods of consistent outperformance of the efficient market.  However, the flat distribution curve suggests that their alpha is highly unstable, and does not stabilize around a single value for long. Once the excess return appear, it will soon be exploited by market players, but the excess return often reappear shortly. 
 
-- However, their alpha is highly unstable, often reverting as market participants exploit the opportunities. 
+- These stocks are uprising assets with great potentials and risks at the same time. The profit could be very large over a short period of time, but it is unpredictable. 
 
-- Despite this reversion, these stocks tend to outperform again, suggesting that their alpha does not stabilize around a single value for long.
+
+### Observations on the Distributions of exposure to Market Risk
+
+$\beta_1$ in the Fama-French model represents the factor loading for market risk, measuring how sensitive an asset is to overall market movements. A $\beta_1 > 1$ indicates that the asset is more volatile than the market, while $\beta_1 < 1$ suggests it is less sensitive to market changes. It evaluates the portion of an asset's returns driven by systematic market risk, making it crucial for understanding exposure to broad economic trends. Investors rely on $\beta_1$ to assess the asset's alignment with market performance and its role in portfolio risk management. 
+
+Although it often appears to be so, a high $\beta_1$ does not essentially mean a good sign. Because high volatility also brings more risk, causing significant loss when the market is going down. when the market is going upward, it is usually preferred to invest on assets with higher exposure to market risk. 
 
 ```{r}
-write.csv(alphas_df, "alpha_df.csv", row.names = FALSE)
+beta1_long <- beta1_df %>%
+  pivot_longer(cols = -Date, names_to = "Stock", values_to = "beta1")
+
+ggplot(beta1_long, aes(x = as.Date(Date), y = beta1, color = Stock)) +
+  geom_line(size = 1) +  # Use lines for trends
+  labs(
+    title = "Beta1 Over Time",
+    x = "Date",
+    y = "beta1",
+    color = "Stock"
+  ) +
+  theme_minimal() +  # Apply a clean theme
+  theme(legend.position = "top")
+
+beta1_long <- beta1_long %>%
+  group_by(Stock) %>%
+  mutate(MeanBeta1 = mean(beta1)) %>%
+  ungroup()
+
+ggplot(beta1_long, aes(x = beta1, y = reorder(Stock, MeanBeta1), fill = MeanBeta1)) +
+  geom_density_ridges(scale = 1.5, rel_min_height = 0.01) +
+  scale_fill_gradient(name = "Mean Beta1", low = "blue", high = "red") +
+  labs(
+    title = "Ridgeline Plot of Beta1 Distributions by Stock",
+    x = "Beta",
+    y = "Stock"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
 ```
+
+#### Stocks with high exposure to Market Risk: NVDA, TSLA, NFLX, MSFT, JPM, AMZN, AAPL, GOOGL, etc.
+Stocks that have a high $\beta_1$, reflecting significant sensitivity to market movements. These stocks often belong to technology, growth, or finance sectors, which are more volatile and influenced by broad economic trends.
+
+#### Stocks with low exposure to Market Risk: BRK.B, UNH, XOM, JNJ, KO, PG, etc.
+Stocks that have a low $\beta_1$, indicating less sensitivity to market movements. These companies are often in stable industries such as consumer staples, healthcare, or energy, providing consistent performance regardless of market volatility.
+
+### Observations on the Distributions of exposure to SMB and HML
+
+Due to the length of the project, the effects of the $\beta_2$ and $\beta_3$ will not be discussed here. The plots of the factor loadings by stocks are shown below. We can notice that the coefficient of SMB and coefficient of HML seem to be negatively correlated. This is because small-cap stocks (high SMB) often exhibit growth characteristics (low HML), while large-cap stocks (low SMB) tend to align with value characteristics (high HML).
+
+```{r}
+beta2_long <- beta2_df %>%
+  pivot_longer(cols = -Date, names_to = "Stock", values_to = "beta2")
+
+ggplot(beta2_long, aes(x = as.Date(Date), y = beta2, color = Stock)) +
+  geom_line(size = 1) +  # Use lines for trends
+  labs(
+    title = "Beta2 Over Time",
+    x = "Date",
+    y = "beta2",
+    color = "Stock"
+  ) +
+  theme_minimal() +  # Apply a clean theme
+  theme(legend.position = "top")
+
+beta2_long <- beta2_long %>%
+  group_by(Stock) %>%
+  mutate(MeanBeta2 = mean(beta2)) %>%
+  ungroup()
+
+ggplot(beta2_long, aes(x = beta2, y = reorder(Stock, MeanBeta2), fill = MeanBeta2)) +
+  geom_density_ridges(scale = 1.5, rel_min_height = 0.01) +
+  scale_fill_gradient(name = "Mean Beta2", low = "blue", high = "red") +
+  labs(
+    title = "Ridgeline Plot of Beta2 Distributions by Stock",
+    x = "Beta2",
+    y = "Stock"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+beta3_long <- beta3_df %>%
+  pivot_longer(cols = -Date, names_to = "Stock", values_to = "beta3")
+
+ggplot(beta3_long, aes(x = as.Date(Date), y = beta3, color = Stock)) +
+  geom_line(size = 1) +  # Use lines for trends
+  labs(
+    title = "Beta3 Over Time",
+    x = "Date",
+    y = "beta3",
+    color = "Stock"
+  ) +
+  theme_minimal() +  # Apply a clean theme
+  theme(legend.position = "top")
+
+beta3_long <- beta3_long %>%
+  group_by(Stock) %>%
+  mutate(MeanBeta3 = mean(beta3)) %>%
+  ungroup()
+
+ggplot(beta3_long, aes(x = beta3, y = reorder(Stock, MeanBeta3), fill = MeanBeta3)) +
+  geom_density_ridges(scale = 1.5, rel_min_height = 0.01) +
+  scale_fill_gradient(name = "Mean Beta3", low = "blue", high = "red") +
+  labs(
+    title = "Ridgeline Plot of Beta3 Distributions by Stock",
+    x = "Beta3",
+    y = "Stock"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+
+### Relationship between Factor Loadings
+
+As we can see more clearly in the parallel coordinate plot, the seemingly positive relation between $\alpha$ and $\beta_1$ is not very strong. We can only say with confidence that $\beta_2$ and $\beta_3$ are indeed negatively correlated.
+
+```{r}
+alphas_median <- apply(alphas_df[-1], 2, median)
+beta1_median <- apply(beta1_df[-1], 2, median)
+beta2_median <- apply(beta2_df[-1], 2, median)
+beta3_median <- apply(beta3_df[-1], 2, median)
+
+loading_df <- data.frame(
+  stock = names(alphas_median),
+  alpha = alphas_median,
+  beta1 = beta1_median,
+  beta2 = beta2_median,
+  beta3 = beta3_median
+)
+
+library(GGally)
+
+# Create the parallel coordinate plot
+ggparcoord(
+  data = loading_df,
+  columns = 2:5,       # Select columns for parallel coordinates (alpha, beta1, beta2, beta3)
+  groupColumn = 1,     # Use the stock column for grouping lines
+  scale = "uniminmax"  # Scale the data to [0, 1] for better visualization
+) +
+  labs(
+    title = "Parallel Coordinate Plot for Stock Factor Loadings",
+    x = "Factors",
+    y = "Scaled Values",
+    color = "Stock"
+  ) +
+  theme_minimal()
+```
+
+
 
