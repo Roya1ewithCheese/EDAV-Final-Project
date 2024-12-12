@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -61,6 +95,8 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -137,7 +173,17 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#observations-on-alpha-distributions" id="toc-observations-on-alpha-distributions" class="nav-link active" data-scroll-target="#observations-on-alpha-distributions"><span class="header-section-number">3.1</span> Observations on Alpha Distributions</a>
+  <ul class="collapse">
+  <li><a href="#low-performing-stocks" id="toc-low-performing-stocks" class="nav-link" data-scroll-target="#low-performing-stocks"><span class="header-section-number">3.1.1</span> Low-Performing Stocks:</a></li>
+  <li><a href="#high-performing-stocks" id="toc-high-performing-stocks" class="nav-link" data-scroll-target="#high-performing-stocks"><span class="header-section-number">3.1.2</span> High-Performing Stocks:</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/Roya1ewithCheese/EDAV-Final-Project.git/edit/main/results.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/Roya1ewithCheese/EDAV-Final-Project.git/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -159,8 +205,338 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>sp500_stock_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"sp500_stock_df.csv"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>sp500_stock_df<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(sp500_stock_df<span class="sc">$</span>Date)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>ff_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"F-F_Research_Data_Factors_daily.csv"</span>, <span class="at">skip =</span> <span class="dv">4</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ff_df <span class="ot">&lt;-</span> ff_df <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> . <span class="sc">/</span> <span class="dv">100</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ff_df<span class="sc">$</span>X <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(ff_df<span class="sc">$</span>X, <span class="at">format =</span> <span class="st">"%Y%m%d"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(ff_df)[<span class="fu">colnames</span>(ff_df) <span class="sc">==</span> <span class="st">"X"</span>] <span class="ot">&lt;-</span> <span class="st">"Date"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>adjusted_close <span class="ot">&lt;-</span> sp500_stock_df <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Date, Adjusted, Ticker) <span class="sc">%&gt;%</span>  <span class="co"># Keep only necessary columns</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Ticker, <span class="at">values_from =</span> Adjusted)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>returns <span class="ot">&lt;-</span> adjusted_close <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="fu">diff</span>(.) <span class="sc">/</span> <span class="fu">lag</span>(.)[<span class="sc">-</span><span class="dv">1</span>]))) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>excess_returns <span class="ot">&lt;-</span> returns <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(ff_df, <span class="at">by =</span> <span class="st">"Date"</span>) <span class="sc">%&gt;%</span>  <span class="co"># Merge by Date</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">.cols =</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(.), <span class="fu">c</span>(<span class="st">"Date"</span>, <span class="st">"RF"</span>)),  <span class="co"># Select all columns except "Date" and "RF"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">.fns =</span> <span class="sc">~</span> . <span class="sc">-</span> RF</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Mkt.RF, <span class="sc">-</span>SMB, <span class="sc">-</span>HML, <span class="sc">-</span>RF)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(excess_returns)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 21
+  Date            AAPL        MSFT     GOOGL     AMZN     TSLA     NVDA  `BRK-B`
+  &lt;date&gt;         &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 2023-12-21 -0.000980  0.00767      1.48e-2  1.11e-2  0.0296   0.0181   2.01e-3
+2 2023-12-22 -0.00576   0.00257      7.41e-3 -2.94e-3 -0.00791 -0.00348  7.17e-4
+3 2023-12-26 -0.00305   0.00000357   2.03e-6 -2.75e-4  0.0159   0.00899  8.00e-4
+4 2023-12-27  0.000308 -0.00178     -8.34e-3 -6.66e-4  0.0186   0.00259  1.26e-4
+5 2023-12-28  0.00202   0.00302     -1.21e-3  5.09e-5 -0.0318   0.00191  1.53e-3
+6 2023-12-29 -0.00563   0.00182     -4.06e-3 -9.60e-3 -0.0188  -0.00021 -2.75e-3
+# ℹ 13 more variables: UNH &lt;dbl&gt;, JNJ &lt;dbl&gt;, V &lt;dbl&gt;, PG &lt;dbl&gt;, JPM &lt;dbl&gt;,
+#   XOM &lt;dbl&gt;, BAC &lt;dbl&gt;, PFE &lt;dbl&gt;, HD &lt;dbl&gt;, MA &lt;dbl&gt;, KO &lt;dbl&gt;, DIS &lt;dbl&gt;,
+#   NFLX &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ff3 <span class="ot">&lt;-</span> ff_df <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>RF) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Date <span class="sc">%in%</span> excess_returns<span class="sc">$</span>Date)  </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ff3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        Date  Mkt.RF     SMB     HML
+1 2013-01-03 -0.0014  0.0011  0.0004
+2 2013-01-04  0.0055  0.0012  0.0036
+3 2013-01-07 -0.0031 -0.0010 -0.0035
+4 2013-01-08 -0.0027  0.0005  0.0000
+5 2013-01-09  0.0034  0.0027 -0.0040
+6 2013-01-10  0.0066 -0.0065  0.0049</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>excess_returns_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(excess_returns)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert Date column to proper Date type if needed</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>excess_returns_df<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(excess_returns_df<span class="sc">$</span>Date)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the Date column as row names</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(excess_returns_df) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(excess_returns_df<span class="sc">$</span>Date)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove the Date column</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>excess_returns_df<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(ff3) <span class="ot">&lt;-</span> ff3<span class="sc">$</span>Date</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>ff3<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="cn">NULL</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>rolling_ff3_coefficients <span class="ot">&lt;-</span> <span class="cf">function</span>(returns, ff3_factors, <span class="at">window_size =</span> <span class="dv">252</span>, <span class="at">check_interval =</span> <span class="dv">21</span>) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check that returns and ff3_factors have the same number of rows</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(returns) <span class="sc">!=</span> <span class="fu">nrow</span>(ff3_factors)) {</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"returns and ff3_factors must have the same number of rows."</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(returns)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  stock_names <span class="ot">&lt;-</span> <span class="fu">colnames</span>(returns)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  factor_names <span class="ot">&lt;-</span> <span class="fu">colnames</span>(ff3_factors)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Initialize lists to store rolling results</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  rolling_alpha <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  rolling_betas <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">"list"</span>, <span class="dv">3</span>) <span class="co"># For 3 factors</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(rolling_betas) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"beta_"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Prepare empty slots for each stock</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (stock <span class="cf">in</span> stock_names) {</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    rolling_alpha[[stock]] <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (beta_key <span class="cf">in</span> <span class="fu">names</span>(rolling_betas)) {</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>      rolling_betas[[beta_key]][[stock]] <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  rolling_dates <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Iterate over rolling windows</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq</span>(window_size, n, <span class="at">by =</span> check_interval)) {</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    start_idx <span class="ot">&lt;-</span> i <span class="sc">-</span> window_size <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>    end_idx <span class="ot">&lt;-</span> i</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    returns_window <span class="ot">&lt;-</span> returns[start_idx<span class="sc">:</span>end_idx, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    factors_window <span class="ot">&lt;-</span> ff3_factors[start_idx<span class="sc">:</span>end_idx, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Construct the model formula: y ~ MKT_RF + SMB + HML</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    model_formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">"y ~"</span>, <span class="fu">paste</span>(factor_names, <span class="at">collapse =</span> <span class="st">" + "</span>)))</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (stock <span class="cf">in</span> stock_names) {</span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> returns_window[[stock]]</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>      data_for_reg <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">y =</span> y, factors_window)</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Fit the linear model</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>      model <span class="ot">&lt;-</span> <span class="fu">lm</span>(model_formula, <span class="at">data =</span> data_for_reg)</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>      coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(model)</span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Store alpha and betas</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>      rolling_alpha[[stock]] <span class="ot">&lt;-</span> <span class="fu">c</span>(rolling_alpha[[stock]], coefs[<span class="dv">1</span>]) <span class="co"># alpha (intercept)</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) {</span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>        rolling_betas[[<span class="fu">paste0</span>(<span class="st">"beta_"</span>, j)]][[stock]] <span class="ot">&lt;-</span> <span class="fu">c</span>(rolling_betas[[<span class="fu">paste0</span>(<span class="st">"beta_"</span>, j)]][[stock]], coefs[j<span class="sc">+</span><span class="dv">1</span>])</span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Record the date of the last observation in the window</span></span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>    rolling_dates <span class="ot">&lt;-</span> <span class="fu">c</span>(rolling_dates, <span class="fu">rownames</span>(returns)[end_idx])</span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert lists to data frames</span></span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>  df_alpha <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(rolling_alpha, <span class="at">row.names =</span> rolling_dates)</span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>  df_betas <span class="ot">&lt;-</span> <span class="fu">lapply</span>(rolling_betas, <span class="cf">function</span>(x) <span class="fu">as.data.frame</span>(x, <span class="at">row.names =</span> rolling_dates))</span>
+<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return a list with alpha and each beta DataFrame</span></span>
+<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> df_alpha,</span>
+<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">beta_1 =</span> df_betas[[<span class="st">"beta_1"</span>]],</span>
+<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">beta_2 =</span> df_betas[[<span class="st">"beta_2"</span>]],</span>
+<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">beta_3 =</span> df_betas[[<span class="st">"beta_3"</span>]]</span>
+<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a><span class="co"># Example usage:</span></span>
+<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a><span class="co"># result &lt;- rolling_ff3_coefficients(returns, ff3_factors)</span></span>
+<span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a><span class="co"># df_alpha &lt;- result$alpha</span></span>
+<span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a><span class="co"># df_beta_1 &lt;- result$beta_1</span></span>
+<span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a><span class="co"># df_beta_2 &lt;- result$beta_2</span></span>
+<span id="cb14-74"><a href="#cb14-74" aria-hidden="true" tabindex="-1"></a><span class="co"># df_beta_3 &lt;- result$beta_3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>factor_loadings <span class="ot">&lt;-</span> <span class="fu">rolling_ff3_coefficients</span>(excess_returns_df, ff3)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(factor_loadings<span class="sc">$</span>alpha)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    AAPL         MSFT        GOOGL          AMZN        TSLA
+2014-01-02 -0.0003616477 5.114619e-04 0.0007859810  4.817369e-04 0.005210094
+2014-02-03  0.0001742518 7.002021e-04 0.0008484218  1.404482e-04 0.005714356
+2014-03-05  0.0005080794 6.362533e-04 0.0006114409 -4.507211e-05 0.007002543
+2014-04-03  0.0006778605 9.277962e-04 0.0006177990 -1.102638e-04 0.006484246
+2014-05-05  0.0011970552 2.969280e-04 0.0002865212 -1.409583e-04 0.005657897
+2014-06-04  0.0013609131 9.916884e-05 0.0003202990 -3.555772e-04 0.002950752
+                   NVDA         BRK.B          UNH          JNJ             V
+2014-01-02 3.162409e-05 -0.0001901288 0.0005315407 0.0003544638  3.425416e-04
+2014-02-03 3.812536e-04 -0.0002567215 0.0005551342 0.0002352726  4.903879e-04
+2014-03-05 7.347537e-04 -0.0003363505 0.0009451016 0.0001188044  3.503168e-04
+2014-04-03 9.221137e-04 -0.0003089358 0.0004178233 0.0002046636  1.449511e-04
+2014-05-05 5.987555e-04 -0.0001755081 0.0003784715 0.0002005931 -7.905324e-05
+2014-06-04 5.012116e-04 -0.0003446874 0.0004466012 0.0002723138 -8.447252e-05
+                      PG           JPM           XOM           BAC
+2014-01-02  1.256082e-05 -3.033465e-05 -1.999020e-04 -0.0001035438
+2014-02-03 -2.869988e-04 -1.645180e-05 -3.693883e-04  0.0006458256
+2014-03-05 -3.488087e-04 -1.439616e-04 -3.642615e-04  0.0006388793
+2014-04-03 -2.116793e-04 -8.847255e-05 -2.586554e-04  0.0001785994
+2014-05-05 -8.401806e-05 -4.048100e-04  5.652692e-05 -0.0002554464
+2014-06-04 -2.447575e-04 -7.475891e-04 -1.269495e-04 -0.0004691909
+                     PFE            HD           MA            KO          DIS
+2014-01-02  2.786952e-06  2.668604e-04 0.0009182481 -0.0003672757 0.0005204040
+2014-02-03  2.612138e-05 -3.678980e-05 0.0006407433 -0.0004431676 0.0002651361
+2014-03-05  9.110633e-05  5.825086e-05 0.0005194964 -0.0005780022 0.0005195191
+2014-04-03 -2.307398e-05  1.474215e-05 0.0003534690 -0.0007047678 0.0004869737
+2014-05-05 -2.589018e-04 -1.133597e-04 0.0004039894 -0.0004716839 0.0001391812
+2014-06-04 -2.386934e-04 -2.235756e-04 0.0003067653 -0.0005214613 0.0001870145
+                  NFLX
+2014-01-02 0.004761343
+2014-02-03 0.003182636
+2014-03-05 0.002821088
+2014-04-03 0.002402549
+2014-05-05 0.001550492
+2014-06-04 0.002097183</code></pre>
+</div>
+</div>
+<p>We apply the Fama-French three-factor model to the returns of the selected assets. The model is expressed as:</p>
+<p><span class="math display">\[
+R_i - R_f = \alpha + \beta_1 (R_m - R_f) + \beta_2 \text{SMB} + \beta_3 \text{HML} + \epsilon
+\]</span></p>
+<p>Where: - <span class="math inline">\(R_i\)</span>: Return of the asset.</p>
+<ul>
+<li><p><span class="math inline">\(R_f\)</span>: Risk-free rate.</p></li>
+<li><p><span class="math inline">\(R_m\)</span>: Market return.</p></li>
+<li><p><span class="math inline">\(\text{SMB}\)</span>: Small-minus-Big factor, representing the size effect.</p></li>
+<li><p><span class="math inline">\(\text{HML}\)</span>: High-minus-Low factor, representing the value effect.</p></li>
+<li><p><span class="math inline">\(\alpha\)</span>: Intercept (alpha).</p></li>
+<li><p>$ _1, _2, _3$: Factor loadings.</p></li>
+<li><p><span class="math inline">\(\epsilon\)</span>: Residual error term.</p></li>
+</ul>
+<p>Instead of focusing solely on returns, our analysis emphasizes the <span class="math inline">\(\alpha\)</span> and the factor loadings <span class="math inline">\(\beta_1, \beta_2, \beta_3\)</span>.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>alphas_df <span class="ot">&lt;-</span> factor_loadings<span class="sc">$</span>alpha <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"Date"</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape data into long format for ggplot</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>alphas_long <span class="ot">&lt;-</span> alphas_df <span class="sc">%&gt;%</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>Date, <span class="at">names_to =</span> <span class="st">"Stock"</span>, <span class="at">values_to =</span> <span class="st">"Alpha"</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(alphas_long, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.Date</span>(Date), <span class="at">y =</span> Alpha, <span class="at">color =</span> Stock)) <span class="sc">+</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span>  <span class="co"># Use lines for trends</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Alphas Over Time"</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Date"</span>,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Alpha"</span>,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Stock"</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span>  <span class="co"># Apply a clean theme</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="results_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<section id="observations-on-alpha-distributions" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="observations-on-alpha-distributions"><span class="header-section-number">3.1</span> Observations on Alpha Distributions</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggridges)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>alphas_long <span class="ot">&lt;-</span> alphas_long <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Stock) <span class="sc">%&gt;%</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">MeanAlpha =</span> <span class="fu">mean</span>(Alpha)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(alphas_long, <span class="fu">aes</span>(<span class="at">x =</span> Alpha, <span class="at">y =</span> <span class="fu">reorder</span>(Stock, MeanAlpha), <span class="at">fill =</span> MeanAlpha)) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density_ridges</span>(<span class="at">scale =</span> <span class="fl">1.5</span>, <span class="at">rel_min_height =</span> <span class="fl">0.01</span>) <span class="sc">+</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">name =</span> <span class="st">"Mean Alpha"</span>, <span class="at">low =</span> <span class="st">"blue"</span>, <span class="at">high =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Ridgeline Plot of Alpha Distributions by Stock"</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Alpha"</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Stock"</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Picking joint bandwidth of 0.000231</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="results_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<section id="low-performing-stocks" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="low-performing-stocks"><span class="header-section-number">3.1.1</span> Low-Performing Stocks:</h3>
+<ul>
+<li><p>The alpha distributions for low-performing stocks exhibit compact and peaked shapes, with the mean centered around zero.</p></li>
+<li><p>This indicates that these stocks consistently achieve alpha values near zero, aligning closely with the efficient market hypothesis. In an efficient market, these stocks do not present persistent opportunities for abnormal returns.</p></li>
+</ul>
+</section>
+<section id="high-performing-stocks" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="high-performing-stocks"><span class="header-section-number">3.1.2</span> High-Performing Stocks:</h3>
+<ul>
+<li><p>The alpha distributions for high-performing stocks display very fat tails and lack a distinct peak, resulting in a flat and widespread shape.</p></li>
+<li><p>These stocks exhibit significantly higher mean alphas, indicating periods of consistent outperformance of the efficient market.</p></li>
+<li><p>However, their alpha is highly unstable, often reverting as market participants exploit the opportunities.</p></li>
+<li><p>Despite this reversion, these stocks tend to outperform again, suggesting that their alpha does not stabilize around a single value for long.</p></li>
+</ul>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -416,7 +792,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/Roya1ewithCheese/EDAV-Final-Project.git/edit/main/results.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/Roya1ewithCheese/EDAV-Final-Project.git/issues/new" class="toc-action">Report an issue</a></p></div></div></div>
+    </div>
     <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
   </div>
 </footer>

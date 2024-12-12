@@ -371,9 +371,9 @@ Attaching package: 'dplyr'</code></pre>
 1 2013-01-02 19.77929 19.82143 19.34393 19.60821 560518000 16.68734   AAPL
 2 2013-01-03 19.56714 19.63107 19.32143 19.36071 352965200 16.47671   AAPL
 3 2013-01-04 19.17750 19.23679 18.77964 18.82143 594333600 16.01776   AAPL
-4 2013-01-07 18.64286 18.90357 18.40000 18.71071 484156400 15.92354   AAPL
+4 2013-01-07 18.64286 18.90357 18.40000 18.71071 484156400 15.92353   AAPL
 5 2013-01-08 18.90036 18.99607 18.61607 18.76107 458707200 15.96639   AAPL
-6 2013-01-09 18.66071 18.75036 18.42821 18.46786 407604400 15.71686   AAPL</code></pre>
+6 2013-01-09 18.66071 18.75036 18.42821 18.46786 407604400 15.71685   AAPL</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -608,7 +608,7 @@ Attaching package: 'dplyr'</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>         mean          q25          q50        q75         sd
-1 0.001042554 -0.007387876 0.0008971106 0.01024173 0.01787847</code></pre>
+1 0.001042554 -0.007387679 0.0008971848 0.01024142 0.01787847</code></pre>
 </div>
 <details>
 <summary>Code</summary>
@@ -624,7 +624,7 @@ JNJ Statistics:</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>          mean          q25          q50         q75         sd
-1 0.0004576924 -0.004636284 0.0004373975 0.005997875 0.01107513</code></pre>
+1 0.0004576925 -0.004636288 0.0004374614 0.005997867 0.01107514</code></pre>
 </div>
 <details>
 <summary>Code</summary>
@@ -648,6 +648,19 @@ JNJ Statistics:</code></pre>
 <p><img src="data_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD We can still extract some useful information from these results:</p>
+<ol type="1">
+<li><strong>AAPL return indeed has a higher mean than JNJ return.</strong></li>
+<li><strong>From the boxplot, we can see AAPL is more volatile than JNJ.</strong><br>
+<em>(Is that essentially a good thing?)</em></li>
+</ol>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(sp500_stock_df, <span class="st">"sp500_stock_df.csv"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>======= &gt;&gt;&gt;&gt;&gt;&gt;&gt; add390be3b356c7fed06a29e21fa0c7c2deb8b81</p>
 </section>
 <section id="missing-value-analysis" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="missing-value-analysis"><span class="header-section-number">2.4</span> Missing value analysis</h2>
