@@ -307,6 +307,19 @@ ggplot(combined_returns, aes(x = Ticker, y = Return, fill = Ticker)) +
   theme_minimal()
 ```
 
+<<<<<<< HEAD
+We can still extract some useful information from these results:
+
+1. **AAPL return indeed has a higher mean than JNJ return.**
+2. **From the boxplot, we can see AAPL is more volatile than JNJ.**  
+   *(Is that essentially a good thing?)*
+
+```{r}
+write.csv(sp500_stock_df, "sp500_stock_df.csv", row.names = FALSE)
+```
+
+=======
+>>>>>>> add390be3b356c7fed06a29e21fa0c7c2deb8b81
 
 
 ## Missing value analysis
