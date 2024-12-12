@@ -233,4 +233,7 @@ ggplot(alphas_long, aes(x = Alpha, y = reorder(Stock, MeanAlpha), fill = MeanAlp
 
 - Despite this reversion, these stocks tend to outperform again, suggesting that their alpha does not stabilize around a single value for long.
 
+```{r}
+write.csv(alphas_df, "alpha_df.csv", row.names = FALSE)
+```
 
