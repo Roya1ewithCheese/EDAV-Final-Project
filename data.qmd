@@ -1,12 +1,12 @@
 # Data
 We picked some stock daily price data from sp500 index.
 
-```{r}
+```{r, warning=FALSE}
 # Load necessary libraries
 library(quantmod)
 library(dplyr)
 library(ggplot2)
-
+options(xts.warn_dplyr_breaks_lag = FALSE)
 # Define a function to fetch stock data
 fetch_stock_data <- function(tickers, start_date, end_date) {
   tryCatch({
@@ -43,7 +43,7 @@ sp500_index_data <- fetch_stock_data(c(sp500_ticker), start_date, end_date)
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 # Load necessary libraries
 library(dplyr)
 library(tidyr)
@@ -88,12 +88,8 @@ sp500_stock_df <- create_neat_dataframe(sp500_stock_data)
 
 The data for this project is sourced from Yahoo Finance, a widely used platform providing comprehensive historical market data for stocks and indices. The dataset includes daily records for multiple assets from the S&P 500 index, with columns such as Date, Open, High, Low, Close, Adjusted Close, and Volume. The primary focus is on the Close price, which will be used to calculate the daily log returns. Log returns are derived by taking the natural logarithm of the ratio of successive closing prices. These returns are central to the analysis as they standardize price changes, making the data scale-independent and additive over time, which simplifies statistical modeling and comparisons. The log return is preferred over simple return because it accounts for compounding effects and ensures symmetry between positive and negative percentage changes, making it ideal for financial data analysis.
 
-```{r}
-# Display the first few rows of the resulting dataframe
-head(sp500_stock_df)
-```
 
-```{r}
+```{r, warning=FALSE}
 library(dplyr)
 library(ggplot2)
 
@@ -113,9 +109,9 @@ ggplot(sp500_subset, aes(x = Date, y = Adjusted, color = Ticker)) +
     y = "Adjusted Close"
   ) +
   theme_minimal()
-
 ```
 
+## Return 
 
 Although an initial glance at raw price data may provide a sense of how various assets evolve over time, such plots are not ideal for comparative analysis. Each asset operates within its own price range, making direct comparisons misleading. To enable a fair evaluation across different assets, we employ measures such as daily returns and cumulative returns. A commonly used definition for the daily return is:
 
@@ -124,7 +120,7 @@ $$
 $$
 
 
-```{r}
+```{r, warning=FALSE}
 daily_returns <- function(data) {
   # Ensure the data is sorted by Date
   data <- data[order(data$Date), ]
@@ -141,11 +137,7 @@ daily_returns <- function(data) {
   
   return(result)
 }
-```
 
-
-
-```{r}
 AAPL_price <- subset(sp500_stock_df, Ticker == "AAPL")
 AAPL_return <- daily_returns((AAPL_price))
 JNJ_price <- subset(sp500_stock_df, Ticker == "JNJ")
@@ -153,10 +145,13 @@ JNJ_return <- daily_returns((JNJ_price))
 ```
 
 
+
 ### Problems with visualizing return over time, and the histogram of return
 
-```{r}
+```{r, warning=FALSE}
 library(patchwork)
+
+
 
 # Create AAPL daily returns plot
 p1 <- ggplot(AAPL_return, aes(x = Date, y = Return)) +
@@ -182,7 +177,7 @@ p2 <- ggplot(JNJ_return, aes(x = Date, y = Return)) +
 p1 + p2
 ```
 
-```{r}
+```{r, warning=FALSE}
 mean_aapl <- mean(AAPL_return$Return, na.rm = TRUE)
 sd_aapl <- sd(AAPL_return$Return, na.rm = TRUE)
 
@@ -231,7 +226,7 @@ p1 + p2
 
 
 ### But when it compounds...
-```{r}
+```{r, warning=FALSE}
 AAPL_compounding_return <- AAPL_return %>%
   mutate(Compounding_Return = cumprod(1 + Return)) %>%
   mutate(Ticker = "AAPL")
@@ -256,15 +251,15 @@ ggplot(combined_compounding_return, aes(x = Date, y = Compounding_Return, color 
 ```
 
 
-## The Limitations of Simple Plots for Analyzing Returns
+### The Limitations of Simple Plots for Analyzing Returns
 The daily return plot looks like noise, oscillating about 0, and we cannot make anything out of it. The histogram of returns has a mean close to 0 and resembles a normal distribution. However, when we look at the compounding return over time, it clearly goes up and is no longer messy. Why is it so hard to capture information out of the return? It’s due to market efficiency: if the returns were obviously informative, then something would be wrong, because no one in the market is foolish. If the return data showed anything other than noise, it would mean easy profit opportunities, which would quickly vanish as participants exploit them through arbitrage. Unless you engage in high-frequency trading, it’s impossible to take advantage of such fleeting signals. Thus, it is perfectly normal for the returns to look like noise, as it reflects an efficient market. 
 
 
-## Is return informative?
+### Is return informative?
 But why does the cumulative return plot appear clearer? In the long term, there are still profits to be gained, influenced by industry trends or other large-scale factors. While these factors are hidden within the daily noise, they become evident when returns accumulate. Simply using basic plots like this, however, won’t help us uncover these subtleties. There are many important patterns hidden in the return data, that are not easy to visualize. We need more complex models to make the non visible pattern visible.
 
 
-```{r}
+```{r, warning=FALSE}
 aapl_stats <- AAPL_return %>%
   summarize(
     mean = mean(Return, na.rm = TRUE),
@@ -307,7 +302,6 @@ ggplot(combined_returns, aes(x = Ticker, y = Return, fill = Ticker)) +
   theme_minimal()
 ```
 
-<<<<<<< HEAD
 We can still extract some useful information from these results:
 
 1. **AAPL return indeed has a higher mean than JNJ return.**
@@ -318,8 +312,105 @@ We can still extract some useful information from these results:
 write.csv(sp500_stock_df, "sp500_stock_df.csv", row.names = FALSE)
 ```
 
-=======
->>>>>>> add390be3b356c7fed06a29e21fa0c7c2deb8b81
+
+## Overview of the mean and volatility of Return 
+
+Before we enter the main part of this project, let's first have an overview of the return data across different assets. To evaluate the data, we need 2 crucial statistics that are always the 2 most important figure of all models: mean and volatility. In financial data, it is often said "Higher the risk, higher the return". Assets with higher mean of return always have a higher variance of return too. It means that it is very hard to find an asset, or create a portfolio that generates a consistent positive return, which is what everybody in the market is looking for. 
+
+```{r, warning=FALSE}
+daily_returns_all <- function(data) {
+  # Ensure the data is sorted by Ticker and Date
+  data <- data[order(data$Ticker, data$Date), ]
+  
+  # Calculate daily returns using lagged Adjusted prices for each Ticker
+  data <- data %>%
+    group_by(Ticker) %>%                           # Group by Ticker
+    mutate(Return = (Adjusted - lag(Adjusted)) /   # Calculate return
+                      lag(Adjusted)) %>%
+    ungroup()                                      # Remove grouping
+  
+  # Select only Date, Ticker, and Return columns for the output
+  result <- data %>% select(Date, Ticker, Return)
+  
+  return(result)
+}
+
+returns <- daily_returns_all(sp500_stock_df)
+mean_returns <- aggregate(Return ~ Ticker, data = returns, FUN = mean)
+mean_returns$Ticker <- reorder(mean_returns$Ticker, -mean_returns$Return)
+ggplot(mean_returns, aes(x = Ticker, y = Return, fill = Ticker)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Mean Return by Asset",
+    x = "Asset",
+    y = "Mean Return"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+
+volatility <- returns %>%
+  group_by(Ticker) %>%
+  summarise(Volatility = sd(Return, na.rm = TRUE))
+
+# Reorder Ticker by Volatility (high to low) for sorting in the plot
+volatility <- volatility %>%
+  mutate(Ticker = reorder(Ticker, -Volatility))
+
+# Create a bar chart for volatility
+ggplot(volatility, aes(x = Ticker, y = Volatility, fill = Ticker)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Volatility (Standard Deviation of Returns) by Asset",
+    x = "Ticker",
+    y = "Volatility"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+```
+### Traditional Strategies
+
+Our goal is to either find assets with higher mean, or asset with lower risk (volatility). Therefore, the 2 intuitive approaches to slect assets are:
+
+- At the same risk level, select assets with higher mean
+
+- At the same mean return level, select assets with lower volatility
 
 
-## Missing value analysis
+```{r, warning=FALSE}
+# Load necessary libraries
+library(dplyr)
+library(plotly)
+
+# Calculate mean and standard deviation (volatility) for each asset
+summary_stats <- returns %>%
+  group_by(Ticker) %>%
+  summarise(
+    Mean = mean(Return, na.rm = TRUE),
+    Volatility = sd(Return, na.rm = TRUE)
+  )
+
+# Create an interactive scatter plot
+fig <- plot_ly(
+  data = summary_stats,
+  x = ~Volatility, 
+  y = ~Mean, 
+  text = ~Ticker,  # Hover text displays the asset name
+  type = 'scatter', 
+  mode = 'markers',
+  marker = list(size = 10, color = 'blue')
+) %>%
+  layout(
+    title = "Mean Return vs. Volatility",
+    xaxis = list(title = "Volatility (Standard Deviation)"),
+    yaxis = list(title = "Mean Return"),
+    hovermode = "closest"
+  )
+
+# Display the plot
+fig
+
+```
+
+By this logic, MSFT is a better choice than AAPL, NVDA is a better choice than NFLX. Because they have higher mean return and lower volatility. 
+
+However, all we have done so far is analyzing past data. In reality, the mean return is one of the hardest statistics to predict. Therefore, simply looking at the statistics of past data is not sufficient enough for us to make investment decisions. In order to dig more information about an asset by its return, we need some modeling work to do. 

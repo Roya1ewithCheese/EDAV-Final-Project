@@ -5,25 +5,51 @@ knitr::opts_chunk$set(warning = FALSE)
 ```
 
 ## The Fama-French Factor Model
+
+We apply the Fama-French three-factor model to the returns of the selected assets. The model is expressed as:
+
+$$ 
+R_i - R_f = \alpha + \beta_1 (R_m - R_f) + \beta_2 \text{SMB} + \beta_3 \text{HML} + \epsilon 
+$$
+
+Where:
+- $R_i$: Return of the asset.
+
+- $R_f$: Risk-free rate.
+
+- $R_m$: Market return.
+
+- $\text{SMB}$: Small-minus-Big factor, representing the size effect.
+
+- $\text{HML}$: High-minus-Low factor, representing the value effect.
+
+- $\alpha$: Intercept (alpha).
+
+- $\beta_1$, $\beta_2$, $\beta_3$: Factor loadings.
+
+- $\epsilon$: Residual error term.
+
+Instead of focusing solely on returns, our analysis emphasizes the $\alpha$ and the factor loadings $\beta_1, \beta_2, \beta_3$.
+
+
+The Fama-French three-factor model is a widely used framework in asset pricing that expands on the traditional CAPM by incorporating size and value factors to better explain stock returns. This model adds the Small-Minus-Big (SMB) factor, capturing the size effect, and the High-Minus-Low (HML) factor, representing the value effect, alongside the market risk premium. By including these additional dimensions, the Fama-French model accounts for systematic patterns in asset returns linked to company size and valuation. In this analysis, the focus lies on estimating the intercept (alpha) and factor loadings ($\beta_1$, $\beta_2$, $\beta_3$) to understand the relationship between asset returns and these underlying factors.
+
+**How we apply the Fama-French Model**
+
+We get the factor loadings ($\alpha$ and the $\beta$s) by linear regression. However, return data is a time series. To fit a linear model on time series, we must always be cautious because the data might evolve through time. That means, "the more data, the better" does not apply to our linear model here. Instead we pick the data from a rolling window, say, the last 30 month, and fit the linear model. We then update the linear model every month. Eventually we get a series of linear model and factor loadings. We then can evaluate the factor loadings not only by its mean, but also the distribution and consistency. We can also study how the factor loadings change through time, or the correlation between factor loadings, or across different assets. 
+
+
 ```{r}
 library(dplyr)
 library(tibble)
+library(tidyr)
 sp500_stock_df <- read.csv("sp500_stock_df.csv")
 sp500_stock_df$Date <- as.Date(sp500_stock_df$Date)
 ff_df <- read.csv("F-F_Research_Data_Factors_daily.csv", skip = 4, header = TRUE)
-```
-
-```{r}
 ff_df <- ff_df %>% mutate(across(where(is.numeric), ~ . / 100))
-```
-
-```{r}
 ff_df$X <- as.Date(ff_df$X, format = "%Y%m%d")
 colnames(ff_df)[colnames(ff_df) == "X"] <- "Date"
-```
 
-```{r}
-library(tidyr)
 adjusted_close <- sp500_stock_df %>%
   select(Date, Adjusted, Ticker) %>%  # Keep only necessary columns
   pivot_wider(names_from = Ticker, values_from = Adjusted)
@@ -31,9 +57,7 @@ adjusted_close <- sp500_stock_df %>%
 returns <- adjusted_close %>%
   mutate(across(where(is.numeric), ~ c(NA, diff(.) / lag(.)[-1]))) %>%
   filter(complete.cases(.))
-```
 
-```{r}
 excess_returns <- returns %>%
   left_join(ff_df, by = "Date") %>%  # Merge by Date
   mutate(across(
@@ -41,18 +65,11 @@ excess_returns <- returns %>%
     .fns = ~ . - RF
   )) %>%
   select(-Mkt.RF, -SMB, -HML, -RF)
-tail(excess_returns)
-```
 
-```{r}
 ff3 <- ff_df %>%
   select(-RF) %>% 
   filter(Date %in% excess_returns$Date)  
 
-tail(ff3)
-```
-
-```{r}
 excess_returns_df <- as.data.frame(excess_returns)
 # Convert Date column to proper Date type if needed
 excess_returns_df$Date <- as.Date(excess_returns_df$Date)
@@ -135,54 +152,12 @@ rolling_ff3_coefficients <- function(returns, ff3_factors, window_size = 252, ch
     beta_3 = df_betas[["beta_3"]]
   ))
 }
-
-# Example usage:
-# result <- rolling_ff3_coefficients(returns, ff3_factors)
-# df_alpha <- result$alpha
-# df_beta_1 <- result$beta_1
-# df_beta_2 <- result$beta_2
-# df_beta_3 <- result$beta_3
-
 ```
 
-
-
-We apply the Fama-French three-factor model to the returns of the selected assets. The model is expressed as:
-
-$$ 
-R_i - R_f = \alpha + \beta_1 (R_m - R_f) + \beta_2 \text{SMB} + \beta_3 \text{HML} + \epsilon 
-$$
-
-Where:
-- $R_i$: Return of the asset.
-
-- $R_f$: Risk-free rate.
-
-- $R_m$: Market return.
-
-- $\text{SMB}$: Small-minus-Big factor, representing the size effect.
-
-- $\text{HML}$: High-minus-Low factor, representing the value effect.
-
-- $\alpha$: Intercept (alpha).
-
-- $ \beta_1, \beta_2, \beta_3$: Factor loadings.
-
-- $\epsilon$: Residual error term.
-
-Instead of focusing solely on returns, our analysis emphasizes the $\alpha$ and the factor loadings $\beta_1, \beta_2, \beta_3$.
 
 
 ```{r}
 factor_loadings <- rolling_ff3_coefficients(excess_returns_df, ff3, window_size = 630)
-head(factor_loadings$alpha)
-```
-
-
-
-
-```{r}
-library(ggplot2)
 
 alphas_df <- factor_loadings$alpha %>%
   rownames_to_column(var = "Date")
@@ -202,6 +177,7 @@ beta3_df <- factor_loadings$beta_3 %>%
 Alpha measures an investment's excess return over a benchmark -- the market or factor-based expectations. In models like Fama-French, it captures the portion of returns unexplained by factors such as market risk or size. In reality, alpha often reverts to zero as market inefficiencies are corrected, making it hard to find and sustain a constantly positive alpha. Investors aim for consistent, positive alpha as a source of stable excess return.
 
 ```{r}
+library(ggplot2)
 library(ggridges)
 alphas_long <- alphas_df %>%
   pivot_longer(cols = -Date, names_to = "Stock", values_to = "Alpha")
@@ -301,9 +277,13 @@ Stocks that have a high $\beta_1$, reflecting significant sensitivity to market 
 #### Stocks with low exposure to Market Risk: BRK.B, UNH, XOM, JNJ, KO, PG, etc.
 Stocks that have a low $\beta_1$, indicating less sensitivity to market movements. These companies are often in stable industries such as consumer staples, healthcare, or energy, providing consistent performance regardless of market volatility.
 
+**Second Thoughts**
+The top assets selected by $\beta_1$ are also those with high $alpha$ and return. Does it mean that $\beta_1$ is a good indicator for selecting high return assets? (Will be verified in the last section)
+
 ### Observations on the Distributions of exposure to SMB and HML
 
 Due to the length of the project, the effects of the $\beta_2$ and $\beta_3$ will not be discussed here. The plots of the factor loadings by stocks are shown below. We can notice that the coefficient of SMB and coefficient of HML seem to be negatively correlated. This is because small-cap stocks (high SMB) often exhibit growth characteristics (low HML), while large-cap stocks (low SMB) tend to align with value characteristics (high HML).
+
 
 ```{r}
 beta2_long <- beta2_df %>%
@@ -375,7 +355,7 @@ ggplot(beta3_long, aes(x = beta3, y = reorder(Stock, MeanBeta3), fill = MeanBeta
 
 As we can see more clearly in the parallel coordinate plot, the seemingly positive relation between $\alpha$ and $\beta_1$ is not very strong. We can only say with confidence that $\beta_2$ and $\beta_3$ are indeed negatively correlated.
 
-```{r}
+```{r, warning=FALSE}
 alphas_median <- apply(alphas_df[-1], 2, median)
 beta1_median <- apply(beta1_df[-1], 2, median)
 beta2_median <- apply(beta2_df[-1], 2, median)
@@ -407,5 +387,225 @@ ggparcoord(
   theme_minimal()
 ```
 
+### Alpha and Return
+
+Finally, we analyze how well $\alpha$ can reflect the return accordingly. That is, we want to find out: is the alpha generated by Fama-French model a good indicator for investment?
+
+```{r, warning=FALSE}
+library(zoo)
+library(plotly)
+# Set parameters
+window_size <- 630
+update_interval <- 21
+
+rownames_to_column <- function(x, var = "Date") {
+  x <- cbind(rowname = rownames(x), x)
+  rownames(x) <- NULL
+  colnames(x)[1] <- var
+  return(x)
+}
+
+excess_returns_df <- rownames_to_column(excess_returns_df)
+excess_returns_df$Date <- as.Date(excess_returns_df$Date, format = "%Y-%m-%d")
+
+
+excess_zoo <- zoo(excess_returns_df[,-1], order.by = excess_returns_df$Date)
+
+# Calculate rolling means with window size 630 and update interval 21
+rolling_mean <- rollapply(
+  data = excess_zoo,
+  width = 630,
+  by = 21,
+  FUN = mean,
+  align = "right",
+  na.rm = TRUE,
+  fill = NA  # Fills incomplete windows with NA
+)
+
+# Convert the rolling mean back to a data frame
+rolling_mean_df <- fortify.zoo(rolling_mean)
+
+# Rename the first column to Date
+names(rolling_mean_df)[1] <- "Date"
+
+# Remove rows with NA values
+rolling_mean_df <- na.omit(rolling_mean_df)
+
+
+alphas_df$Date <- as.Date(alphas_df$Date, format = "%Y-%m-%d")
+
+
+merged_df <- rolling_mean_df |>
+  inner_join(alphas_df, by = "Date", suffix = c("_mean", "_alpha"))
+
+
+
+long_df <- merged_df |>
+  pivot_longer(
+    cols = -Date,                # Exclude the Date column
+    names_to = c("Stock", "Metric"), # Split column names into Stock and Metric
+    names_sep = "_",             # Separator between Stock and Metric
+    values_to = "Value"          # Name of the new value column
+  ) |>
+  pivot_wider(
+    names_from = "Metric",       # Spread Metric into separate columns
+    values_from = "Value"        # Populate with corresponding values
+  )
+
+```
+```{r, warning=FALSE}
+clean_long_df <- long_df |>
+  drop_na(mean, alpha)
+
+#interactive plot with plotly
+interactive_scatter <- clean_long_df |>
+  ggplot(aes(x = alpha, y = mean, color = Stock, text = paste("Stock:", Stock))) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Rolling Alpha vs Rolling Mean for Each Stock",
+    x = "Rolling Alpha",
+    y = "Rolling Mean",
+    color = "Stock"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# Convert to an interactive plotly object
+interactive_plotly <- interactive_scatter |>
+  ggplotly(tooltip = c("x", "y", "color", "text"))
+
+# Display the interactive plot
+interactive_plotly
+
+```
+
+
+We can observe that there is a strong positive linear relationship between mean return and alpha. We can design new strategies based on this finding: apply Fama-French model to the return data, and select assets with good alpha. The advantages about this strategy is that it only uses idiosyncratic return as credential, not influenced by systematic risk, like the market risk premium, SMB or HML. 
+
+**What does "good" mean?**
+It can mean a consistently positive alpha, like MSFT, or an alpha with high mean but very unstable, like TSLA or NVDA, depending on the investor's strategy.
+
+
+
+
+By faceting by asset, we can observe that different asset have a case. 
+
+```{r, warning=FALSE}
+
+# Create faceted scatter plots, one for each stock
+faceted_plot <- clean_long_df |>
+  ggplot(aes(x = alpha, y = mean)) +
+  geom_point(color = "steelblue", alpha = 0.6) +
+  facet_wrap(~ Stock, scales = "free") +
+  labs(
+    title = "Rolling Alpha vs Rolling Mean per Stock",
+    x = "Rolling Alpha",
+    y = "Rolling Mean"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# Display the faceted scatter plots
+print(faceted_plot)
+
+```
+
+#### Strong Linear Relationship: DIS, PG, NFLX, TSLA
+These assets show strong linear relationship between alpha and mean return. When using Fama-French alpha as the trading strategy, these assets would be investors' top choice. 
+
+#### Linear Relationship with Homoscedasticity Problem: BAC, GOOGL, MA
+For these assets, the residuals of the linear model change as fitted values change. Investors should take the value into consideration. For example, when the alpha of MA is low, investors should be cautious when using alpha as the indicator, because the linear relationship between alpha and return is weak when alpha is low. 
+
+#### Weak Linear Relationship: JPM, MSFT
+For these assets, the alpha generated by the Fama-French model is not a good trading signal, because the linear relationship between alpha and return is very weak. 
+
+
+### Why is alpha better than betas?
+
+From the previous distribution plot, we can see that assets with high return (TSLA, NVDA, NFLX) not only have high $\alpha$, but also have high $\beta_1$, that is, they are also more exposed to the overall market performance. The following question is: can $\beta_1$ be a good indicator for trading strategies? 
+
+In theory, a high $\beta_1$ only means the asset is more sensitive to the market. And it would only perform well when the market is good, but performs worse when market is bad. (For example: if $\beta_1=1.5$, when the market makes 2% return, the asset will make a 3% return, but when the market makes 2% loss, the asset will also make a 3% loss) However, the plots still show that top assets tend to have high $\beta_1$. We need further analysis to verify this observation. 
+
+```{r, warning=FALSE}
+beta1_df$Date <- as.Date(beta1_df$Date, format = "%Y-%m-%d")
+
+
+merged_df <- rolling_mean_df |>
+  inner_join(beta1_df, by = "Date", suffix = c("_mean", "_beta1"))
+
+long_df <- merged_df |>
+  pivot_longer(
+    cols = -Date,                # Exclude the Date column
+    names_to = c("Stock", "Metric"), # Split column names into Stock and Metric
+    names_sep = "_",             # Separator between Stock and Metric
+    values_to = "Value"          # Name of the new value column
+  ) |>
+  pivot_wider(
+    names_from = "Metric",       # Spread Metric into separate columns
+    values_from = "Value"        # Populate with corresponding values
+  )
+
+
+clean_long_df <- long_df |>
+  drop_na(mean, beta1)
+
+#interactive plot with plotly
+interactive_scatter <- clean_long_df |>
+  ggplot(aes(x = beta1, y = mean, color = Stock, text = paste("Stock:", Stock))) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Rolling Beta1 vs Rolling Mean for Each Stock",
+    x = "Rolling Beta1",
+    y = "Rolling Mean",
+    color = "Stock"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# Convert to an interactive plotly object
+interactive_plotly <- interactive_scatter |>
+  ggplotly(tooltip = c("x", "y", "color", "text"))
+
+# Display the interactive plot
+interactive_plotly
+```
+
+
+From the scatter plot, we can see that $\beta_1$ do not affect mean return significantly. This finding supports our theory, and points out falsehood of "$\beta_1$ means high return" that the ridgeline plot has shown. 
+
+
+#### Can we use beta to predict the return of specific asset?
+
+Even faceted by asset, it is still hard to find linear relationship between $\beta_1$ and mean return. However, we do have some new findings from the plot below, that can motivate a deeper study for a particular asset. 
+
+- V has a weak linear relationship
+- For assets like AAPL, GOOGL, PG, MSFT, there is an obvious non-linear relationship that can still be modeled. 
+
+```{r, warning=FALSE}
+
+faceted_plot <- clean_long_df |>
+  ggplot(aes(x = beta1, y = mean)) +
+  geom_point(color = "steelblue", alpha = 0.6) +
+  facet_wrap(~ Stock, scales = "free") +
+  labs(
+    title = "Rolling Beta1 vs Rolling Mean per Stock",
+    x = "Rolling Beta1",
+    y = "Rolling Mean"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# Display the faceted scatter plots
+print(faceted_plot)
+
+```
 
 

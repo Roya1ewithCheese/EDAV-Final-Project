@@ -1,1 +1,7 @@
 # Conclusion
+
+In this study, we conducted exploratory data analysis on stock data. First, we focused on analyzing returns rather than price data because returns are scale-invariant and better illustrate profitability. We found that mean returns and return variances are positively correlated; higher mean returns are associated with higher risk. 
+
+In addition to exploring the mean and variance of return data, we employed a factor model to extract more information about each asset based on its return data. In this project, we utilized the Fama-French three-factor model. We found that, most of the time, alpha equals zero, indicating an efficient market. We observed assets with high alpha and further differentiated between consistently high alpha assets, such as MSFT, and unstable alpha assets, such as TSLA and NVDA, which are emerging assets with significant profit potential. We also analyzed the betas to identify assets with high and low exposure to market risk. Furthermore, we found that the factor loadings for SMB and HML are negatively correlated. We can use the coefficients of SMB and HML to differentiate between small, emerging assets and large value assets. 
+
+Lastly, we examined the relationship between alpha and returns, demonstrating that high alpha indeed indicates high returns. Alpha is a highly reliable signal for investment. Additionally, we found that beta can sometimes provide misleading signals to investors, as it has a more complex relationship with returns. Therefore, caution should be exercised when using betas as investment signals.
